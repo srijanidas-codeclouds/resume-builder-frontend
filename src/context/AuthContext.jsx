@@ -35,6 +35,9 @@ const canDeleteUsers = isAdmin;
     setLoading(true);
     try {
       const res = await AuthService.login(credentials);
+      if (!res.data.token) {
+      throw new Error("No token returned from backend");
+      }
       localStorage.setItem("auth_token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setUser(res.data.user);
