@@ -1,22 +1,19 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  // baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  baseURL: 'https://resume-builder-backend-b7er.onrender.com/api',
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
   },
-  withCredentials: true,
+  // withCredentials: true,
 });
 
 // Attach Bearer token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("auth_token");
-  if (
-    token &&
-    !config.url.includes("/login") &&
-    !config.url.includes("/register")
-  ) {
+  if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

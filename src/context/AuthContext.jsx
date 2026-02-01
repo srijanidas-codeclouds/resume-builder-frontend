@@ -32,20 +32,34 @@ const canDeleteUsers = isAdmin;
 
 
   const login = async (credentials) => {
-    setLoading(true);
-    try {
-      const res = await AuthService.login(credentials);
-      if (!res.data.token) {
-      throw new Error("No token returned from backend");
-      }
-      localStorage.setItem("auth_token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      setUser(res.data.user);
-      return res.data.user;
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const res = await AuthService.login(credentials);
+
+    if (!res?.data?.token) {
+      throw new Error("Invalid login response");
     }
-  };
+
+    localStorage.setItem("auth_token", res.data.token);
+    localStorage.setItem("user", JSON.stringify(res.data.user));
+    setUser(res.data.user);
+
+    return res.data.user;
+  } catch (err) {
+    // Axios-aware error extraction
+    const message =
+      err.response?.data?.message ||
+      err.response?.data?.errors?.email?.[0] ||
+      err.response?.data?.errors?.password?.[0] ||
+      "Login failed";
+
+    // Important: rethrow a clean Error
+    throw new Error(message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const register = async (data) => {
     setLoading(true);

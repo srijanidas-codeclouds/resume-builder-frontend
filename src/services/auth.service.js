@@ -16,7 +16,6 @@ export const AuthService = {
   resetPassword(payload) {
     return api.post("/reset-password", payload);
   },
-
   logout() {
     return api.post("/logout");
   },

@@ -39,15 +39,9 @@ const SignIn = () => {
     });
 
     toast.success("Logged in successfully.");
-
-    if (loggedInUser.role === "admin") {
-      navigate("/admin", { replace: true });
-    } else {
-      navigate("/dashboard/my-resumes", { replace: true });
-    }
   } catch (error) {
     console.error(error.response?.data || "Login failed");
-    toast.error("User not found or invalid credentials.");
+    toast.error(error.message || "Login failed");
   }
 };
 
