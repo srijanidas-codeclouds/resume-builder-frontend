@@ -57,7 +57,7 @@ const AdminLayout = () => {
           {isAdmin && (
             <div className="mt-6 pt-4 border-t border-slate-200/40 dark:border-slate-700/40">
               <a
-                href={`${import.meta.env.VITE_APP_URL}/blade-admin/login`}
+                href={`https://resume-builder-backend-b7er.onrender.com/blade-admin/login`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-700 dark:text-amber-400 hover:bg-amber-100/40 dark:hover:bg-amber-400/10 transition-all"
