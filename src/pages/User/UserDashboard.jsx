@@ -20,16 +20,20 @@ const UserDashboard = () => {
      FETCH RESUMES
   ===================== */
   const fetchResumes = async () => {
-    try {
-      setLoading(true);
-      const res = await resumeService.getAll();
-      setResumes(res.data.data);
-    } catch {
-      toast.error("Failed to load resumes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    const res = await resumeService.getAll();
+    const list = res?.data?.data;
+
+    setResumes(Array.isArray(list) ? list : []);
+  } catch {
+    setResumes([]);
+    toast.error("Failed to load resumes");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchResumes();
@@ -91,7 +95,7 @@ const UserDashboard = () => {
                   Welcome back, {user?.name || user?.username || "User"}
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400">
-                  You have {resumes.length} resumes in your account.
+                  You have {safeResumes.length} resumes in your account.
                 </p>
               </div>
             </div>
