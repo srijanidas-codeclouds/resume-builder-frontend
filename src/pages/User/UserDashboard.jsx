@@ -56,14 +56,19 @@ const UserDashboard = () => {
   /* =====================
      FILTERING
   ===================== */
-  const filteredResumes = useMemo(() => {
-    if (activeTab === "drafts") {
-      return resumes.filter((r) => r.status === "draft");
-    }
-    return resumes;
-  }, [resumes, activeTab]);
+  const safeResumes = Array.isArray(resumes) ? resumes : [];
 
-  const draftCount = resumes.filter((r) => r.status === "draft").length;
+  const filteredResumes = useMemo(() => {
+  if (activeTab === "drafts") {
+    return safeResumes.filter((r) => r.status === "draft");
+  }
+  return safeResumes;
+}, [safeResumes, activeTab]);
+
+  const draftCount = safeResumes.filter(
+  (r) => r.status === "draft"
+).length;
+
 
   return (
     <div className="bg-background-light dark:bg-background-dark min-h-screen font-display">
