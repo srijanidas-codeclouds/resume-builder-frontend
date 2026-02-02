@@ -15,6 +15,8 @@ const DashboardLayout = () => {
     { name: "Discover", path: "/dashboard/discover", icon: "fa-compass" },
   ];
 
+  const isAdmin = user?.role === "admin";
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (

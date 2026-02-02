@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 
 const AdminLayout = () => {
   const { logout, user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const navClass = ({ isActive }) => 
     `flex items-center px-4 py-3 rounded-xl transition-all duration-300 ${
       isActive 
@@ -52,6 +53,23 @@ const AdminLayout = () => {
             </span>
             Stats
           </NavLink>
+          {/* Admin Section - Now stays at the bottom of the nav list or scrolls with it */}
+          {isAdmin && (
+            <div className="mt-6 pt-4 border-t border-slate-200/40 dark:border-slate-700/40">
+              <a
+                href={`${import.meta.env.VITE_APP_URL}/blade-admin/login`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-700 dark:text-amber-400 hover:bg-amber-100/40 dark:hover:bg-amber-400/10 transition-all"
+              >
+                <i className="fa fa-shield w-5 text-center"></i>
+                <span className="font-medium">Super Admin</span>
+              </a>
+              <p className="mt-1 text-[10px] text-slate-500 px-3 uppercase tracking-wider">
+                System Access
+              </p>
+            </div>
+          )}
         </nav>
 
         {/* Profile Section */}
