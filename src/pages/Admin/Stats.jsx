@@ -13,7 +13,7 @@ const Stats = () => {
   const fetchStats = useCallback(async (isManual = false) => {
     if (isManual) setIsRefreshing(true);
     try {
-      const res = await adminApi.getStats();
+      const res = await adminApi.index();
       // Expecting { totalUsers, activeToday, premiumUsers, suspendedUsers, growth }
       setStats(res.data);
     } catch (err) {

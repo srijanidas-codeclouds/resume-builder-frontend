@@ -89,7 +89,7 @@ const Users = () => {
   setLoading(true);
   try {
     // Fetch fresh details including resume_count from backend
-    const res = await adminApi.getUserDetails(user.id); 
+    const res = await adminApi.getUser(user.id); 
     setViewingUser(res.data);
   } catch (err) {
     toast.error("Could not fetch user details");

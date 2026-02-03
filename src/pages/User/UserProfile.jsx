@@ -1,7 +1,57 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import ProgressCard from "../../components/ProgressCard";
+import toast from "react-hot-toast";
 
 const UserProfile = () => {
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+
+  /**
+   * Simulated fetch (replace with real API later)
+   */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        // 🔁 Replace this with real API call later
+        await new Promise((r) => setTimeout(r, 600));
+
+        setProfile({
+          name: "Alex Thompson",
+          title: "Senior Software Engineer",
+          avatar:
+            "https://ui-avatars.com/api/?name=Alex+Thompson&background=4f46e5&color=fff",
+          resumeScore: "Expert",
+          memberSince: "Jan 2024",
+          completion: 86,
+          atsScores: [
+            {
+              name: "Frontend Dev",
+              score: 92,
+              color: "from-blue-500 to-indigo-600",
+            },
+            {
+              name: "Fullstack Role",
+              score: 78,
+              color: "from-purple-500 to-pink-600",
+            },
+          ],
+        });
+      } catch (err) {
+        toast.error("Unable to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="h-64 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 animate-pulse" />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header */}
@@ -14,7 +64,11 @@ const UserProfile = () => {
             Track your resume strength and profile completion.
           </p>
         </div>
-        <button className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow-lg shadow-indigo-500/20 text-sm font-semibold">
+
+        <button
+          onClick={() => toast("Resume editor coming soon ✨")}
+          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow-lg shadow-indigo-500/20 text-sm font-semibold"
+        >
           Update Resume
         </button>
       </div>
@@ -27,27 +81,32 @@ const UserProfile = () => {
             <div className="flex flex-col items-center text-center">
               <div className="relative mb-4">
                 <img
-                  src="https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff"
+                  src={profile.avatar}
                   alt="Avatar"
                   className="w-24 h-24 rounded-2xl shadow-2xl shadow-indigo-500/20"
                 />
                 <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-white dark:border-slate-900 rounded-full"></div>
               </div>
+
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                Alex Thompson
+                {profile.name}
               </h2>
+
               <p className="text-sm text-indigo-500 font-medium mb-6">
-                Senior Software Engineer
+                {profile.title}
               </p>
 
               <div className="w-full space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Resume Score</span>
-                  <span className="font-bold text-emerald-500">Expert</span>
+                  <span className="font-bold text-emerald-500">
+                    {profile.resumeScore}
+                  </span>
                 </div>
+
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Member Since</span>
-                  <span className="font-medium">Jan 2024</span>
+                  <span className="font-medium">{profile.memberSince}</span>
                 </div>
               </div>
             </div>
@@ -56,12 +115,10 @@ const UserProfile = () => {
 
         {/* Right: Stats & Progress */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Top Row: Progress & Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-            <ProgressCard />
-          </div>
+          {/* Progress */}
+          <ProgressCard completion={profile.completion} />
 
-          {/* Bottom Row: ATS Scores */}
+          {/* ATS Scores */}
           <div className="glass-card p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
             <h3 className="text-lg font-bold mb-6 text-slate-900 dark:text-white flex items-center gap-2">
               <i className="fa fa-line-chart text-indigo-500"></i>
@@ -69,18 +126,7 @@ const UserProfile = () => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {[
-                {
-                  name: "Frontend Dev",
-                  score: 92,
-                  color: "from-blue-500 to-indigo-600",
-                },
-                {
-                  name: "Fullstack Role",
-                  score: 78,
-                  color: "from-purple-500 to-pink-600",
-                },
-              ].map((item, i) => (
+              {profile.atsScores.map((item, i) => (
                 <div
                   key={i}
                   className="space-y-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50"
@@ -91,6 +137,7 @@ const UserProfile = () => {
                       {item.score}%
                     </span>
                   </div>
+
                   <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full bg-gradient-to-r ${item.color}`}

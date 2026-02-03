@@ -45,7 +45,7 @@ const AdminLayout = () => {
             Users
           </NavLink>
           
-          <NavLink title="Analytics" to="/admin/stats" className={navClass}>
+          <NavLink title="Analytics" to="/admin/stats/summary" className={navClass}>
             <span className="mr-3 text-lg opacity-70">
                 <div className="material-symbols-outlined">
                     bar_chart
@@ -58,8 +58,9 @@ const AdminLayout = () => {
             <div className="mt-6 pt-4 border-t border-slate-200/40 dark:border-slate-700/40">
               <a
                 href={`https://resume-builder-backend-b7er.onrender.com/blade-admin/login`}
-                target="_blank"
-                rel="noopener noreferrer"
+                // href={`http://127.0.0.1:8000/blade-admin/login`}
+                // target="_blank"
+                // rel="noopener noreferrer"
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-700 dark:text-amber-400 hover:bg-amber-100/40 dark:hover:bg-amber-400/10 transition-all"
               >
                 <i className="fa fa-shield w-5 text-center"></i>
