@@ -2,7 +2,7 @@ import axios from "axios";
 // https://resume-builder-backend-b7er.onrender.com
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api`,
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: 'https://resume-builder-backend-b7er.onrender.com/api',
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
