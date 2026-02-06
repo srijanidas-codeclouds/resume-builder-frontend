@@ -54,6 +54,19 @@ const Navbar = () => {
     }
   }, [isAuthenticated]);
 
+  const scrollToSection = (id) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const y =
+    el.getBoundingClientRect().top +
+    window.pageYOffset -
+    80; // navbar height
+
+  window.scrollTo({ top: y, behavior: "smooth" });
+};
+
+
   return (
     <header
       className={`
@@ -74,13 +87,13 @@ const Navbar = () => {
         {/* DESKTOP NAV */}
         <nav className="hidden md:flex gap-8 text-sm text-slate-600 dark:text-slate-300">
           {navigation.map((item) => (
-            <a
+            <button
+              onClick={() => scrollToSection(item.href.substring(1))}
               key={item.name}
-              href={item.href}
               className="hover:text-slate-900 dark:hover:text-white transition"
             >
               {item.name}
-            </a>
+            </button>
           ))}
         </nav>
 
@@ -180,17 +193,19 @@ const Navbar = () => {
               </button>
             </div>
 
-            <nav className="flex flex-col gap-4">
-              {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
-              ))}
-            </nav>
+            {navigation.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  scrollToSection(item.href);
+                  setMobileMenuOpen(false);
+                }}
+                className="text-left"
+              >
+                {item.name}
+              </button>
+            ))}
+
 
             {isAuthenticated ? (
               <div className="mt-6 flex items-center gap-3">

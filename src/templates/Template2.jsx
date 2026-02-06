@@ -11,7 +11,9 @@ import {
 
 // Helper
 export function formatYearMonth(yearMonth) {
-  return yearMonth ? moment(yearMonth, "YYYY-MM").format("MMM YYYY") : "";
+  if (!yearMonth) return "";
+  if (yearMonth === "Present") return "Present";
+  return moment(yearMonth, "YYYY-MM").format("MMM YYYY");
 }
 
 // --- PDF Styles (ATS Optimized) ---
@@ -27,7 +29,7 @@ const pdfStyles = PDFStyleSheet.create({
   header: {
     marginBottom: 20,
     textAlign: "center",
-    borderBottomWidth: 2, // Slightly thicker for accent
+    borderBottomWidth: 2,
     paddingBottom: 10,
   },
   name: {
@@ -115,6 +117,18 @@ const pdfStyles = PDFStyleSheet.create({
     fontSize: 9,
     borderRadius: 2,
   },
+  techStack: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginTop: 4,
+    gap: 4,
+  },
+  techTag: {
+    fontSize: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 2,
+  },
 });
 
 const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
@@ -171,9 +185,20 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
                 {contactInfo.email}
               </ELink>
             )}
+            {contactInfo.location && <EText style={pdfStyles.contactItem}>{contactInfo.location}</EText>}
             {contactInfo.linkedin && (
               <ELink src={contactInfo.linkedin} style={[pdfStyles.contactItem, { color: accentColor }]}>
                 LinkedIn
+              </ELink>
+            )}
+            {contactInfo.github && (
+              <ELink src={contactInfo.github} style={[pdfStyles.contactItem, { color: accentColor }]}>
+                GitHub
+              </ELink>
+            )}
+            {contactInfo.website && (
+              <ELink src={contactInfo.website} style={[pdfStyles.contactItem, { color: accentColor }]}>
+                Website
               </ELink>
             )}
           </EView>
@@ -196,9 +221,13 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
                 <EView style={pdfStyles.blockHeader}>
                   <EView>
                     <EText style={pdfStyles.title}>{exp.title}</EText>
-                    <EText style={pdfStyles.subtitle}>{exp.company}</EText>
+                    <EText style={pdfStyles.subtitle}>
+                      {exp.company}{exp.location ? ` | ${exp.location}` : ""}
+                    </EText>
                   </EView>
-                  <EText style={pdfStyles.date}>{formatYearMonth(exp.startDate)} – {formatYearMonth(exp.endDate)}</EText>
+                  <EText style={pdfStyles.date}>
+                    {formatYearMonth(exp.startDate)} – {formatYearMonth(exp.endDate)}
+                  </EText>
                 </EView>
                 <EView style={pdfStyles.description}>{renderBullets(exp.description)}</EView>
               </EView>
@@ -207,91 +236,98 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
         )}
 
         {/* PROJECTS */}
-{projects.length > 0 && (
-  <EView style={pdfStyles.section}>
-    <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>
-      Projects
-    </EText>
-    {projects.map((proj, i) => (
-      <EView key={i} style={pdfStyles.block}>
-        <EView style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 }}>
-          <EText style={pdfStyles.title}>{proj.title}</EText>
-          {proj.liveDemo && (
-            <ELink src={proj.liveDemo} style={[pdfStyles.link, { fontSize: 9, color: accentColor }]}>
-              [Live]
-            </ELink>
-          )}
-          {proj.github && (
-            <ELink src={proj.github} style={[pdfStyles.link, { fontSize: 9, color: accentColor }]}>
-              [Code]
-            </ELink>
-          )}
-        </EView>
-        <EText style={{ fontSize: 10, lineHeight: 1.4 }}>{proj.description}</EText>
-      </EView>
-    ))}
-  </EView>
-)}
+        {projects.length > 0 && (
+          <EView style={pdfStyles.section}>
+            <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>
+              Projects
+            </EText>
+            {projects.map((proj, i) => (
+              <EView key={i} style={pdfStyles.block}>
+                <EView style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                  <EText style={pdfStyles.title}>{proj.title}</EText>
+                  {(proj.liveDemo || proj.github) && (
+                    <EView style={{ flexDirection: "row", gap: 6 }}>
+                      {proj.liveDemo && (
+                        <ELink src={proj.liveDemo} style={[pdfStyles.link, { fontSize: 8, color: accentColor }]}>
+                          Live
+                        </ELink>
+                      )}
+                      {proj.github && (
+                        <ELink src={proj.github} style={[pdfStyles.link, { fontSize: 8, color: accentColor }]}>
+                          Code
+                        </ELink>
+                      )}
+                    </EView>
+                  )}
+                </EView>
+                <EText style={{ fontSize: 10, color: "#374151" }}>{proj.description}</EText>
+                {proj.technologies && proj.technologies.length > 0 && (
+                  <EView style={pdfStyles.techStack}>
+                    {proj.technologies.map((tech, idx) => (
+                      <EText 
+                        key={idx} 
+                        style={[pdfStyles.techTag, { backgroundColor: accentColor + '15', color: accentColor }]}
+                      >
+                        {tech}
+                      </EText>
+                    ))}
+                  </EView>
+                )}
+              </EView>
+            ))}
+          </EView>
+        )}
 
-{/* EDUCATION */}
-{education.length > 0 && (
-  <EView style={pdfStyles.section}>
-    <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>
-      Education
-    </EText>
-    {education.map((edu, i) => (
-      <EView key={i} style={pdfStyles.block}>
-        <EView style={pdfStyles.blockHeader}>
-          <EView>
-            <EText style={pdfStyles.title}>{edu.institution}</EText>
-            <EText style={pdfStyles.subtitle}>{edu.degree}</EText>
+        {/* EDUCATION */}
+        {education.length > 0 && (
+          <EView style={pdfStyles.section}>
+            <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>Education</EText>
+            {education.map((edu, i) => (
+              <EView key={i} style={pdfStyles.block}>
+                <EView style={pdfStyles.blockHeader}>
+                  <EView>
+                    <EText style={pdfStyles.title}>{edu.institution}</EText>
+                    <EText style={pdfStyles.subtitle}>{edu.degree}</EText>
+                  </EView>
+                  <EView style={{ textAlign: "right" }}>
+                    <EText style={pdfStyles.date}>
+                      {formatYearMonth(edu.startDate)} – {formatYearMonth(edu.endDate)}
+                    </EText>
+                    {edu.gpa && <EText style={pdfStyles.date}>GPA: {edu.gpa}</EText>}
+                  </EView>
+                </EView>
+              </EView>
+            ))}
           </EView>
-          <EView style={{ alignItems: "flex-end" }}>
-            <EText style={pdfStyles.date}>
-              {formatYearMonth(edu.startDate)} – {formatYearMonth(edu.endDate)}
-            </EText>
-            {edu.gpa && <EText style={pdfStyles.date}>GPA: {edu.gpa}</EText>}
-          </EView>
-        </EView>
-      </EView>
-    ))}
-  </EView>
-)}
+        )}
 
-{/* CERTIFICATIONS & LANGUAGES */}
-{(certifications.length > 0 || languages.length > 0) && (
-  <EView style={{ flexDirection: "row", gap: 20 }}>
-    {certifications.length > 0 && (
-      <EView style={{ flex: 1 }}>
-        <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>
-          Certifications
-        </EText>
-        {certifications.map((c, i) => (
-          <EView key={i} style={{ flexDirection: "row", marginBottom: 2 }}>
-            <EText style={{ color: accentColor, width: 10, fontSize: 10 }}>•</EText>
-            <EText style={{ fontSize: 9 }}>
-              {c.name} ({c.issueDate})
-            </EText>
-          </EView>
-        ))}
-      </EView>
-    )}
-    {languages.length > 0 && (
-      <EView style={{ flex: 1 }}>
-        <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>
-          Languages
-        </EText>
-        <EView style={pdfStyles.skillList}>
-          {languages.map((l, i) => (
-            <EText key={i} style={{ fontSize: 9 }}>
-              {l.name} {l.progress ? `(${l.progress})` : ""}
-            </EText>
-          ))}
+        {/* CERTIFICATIONS & LANGUAGES */}
+        <EView style={{ flexDirection: "row", gap: 20 }}>
+          {certifications.length > 0 && (
+            <EView style={{ flex: 1 }}>
+              <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>Certifications</EText>
+              {certifications.map((c, i) => (
+                <EView key={i} style={{ marginBottom: 4 }}>
+                  <EText style={{ fontSize: 9, fontWeight: "bold" }}>{c.name}</EText>
+                  <EText style={{ fontSize: 8, color: "#6b7280" }}>
+                    {c.issuer} {c.issueDate && `(${c.issueDate})`}
+                  </EText>
+                </EView>
+              ))}
+            </EView>
+          )}
+
+          {languages.length > 0 && (
+            <EView style={{ flex: 1 }}>
+              <EText style={[pdfStyles.sectionTitle, { borderBottomColor: accentColor, color: accentColor }]}>Languages</EText>
+              {languages.map((l, i) => (
+                <EText key={i} style={{ fontSize: 9 }}>
+                  {l.name} {l.level ? `(${l.level})` : ""}
+                </EText>
+              ))}
+            </EView>
+          )}
         </EView>
-      </EView>
-    )}
-  </EView>
-)}
 
         {/* SKILLS */}
         {skills.length > 0 && (
@@ -331,22 +367,35 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
           {profileInfo.designation}
         </h2>
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
-            {contactInfo.phone && <span className="text-gray-600">{contactInfo.phone}</span>}
-            {contactInfo.email && (
-                <a href={`mailto:${contactInfo.email}`} style={{ color: accentColor }} className="hover:underline">{contactInfo.email}</a>
-            )}
-            {contactInfo.linkedin && (
-                <a href={contactInfo.linkedin} style={{ color: accentColor }} className="hover:underline">LinkedIn</a>
-            )}
-             {contactInfo.github && (
-                <a href={contactInfo.github} style={{ color: accentColor }} className="hover:underline">GitHub</a>
-            )}
+          {contactInfo.phone && <span className="text-gray-600">{contactInfo.phone}</span>}
+          {contactInfo.email && (
+            <a href={`mailto:${contactInfo.email}`} style={{ color: accentColor }} className="hover:underline">
+              {contactInfo.email}
+            </a>
+          )}
+          {contactInfo.location && <span className="text-gray-600">{contactInfo.location}</span>}
+          {contactInfo.linkedin && (
+            <a href={contactInfo.linkedin} style={{ color: accentColor }} className="hover:underline">
+              LinkedIn
+            </a>
+          )}
+          {contactInfo.github && (
+            <a href={contactInfo.github} style={{ color: accentColor }} className="hover:underline">
+              GitHub
+            </a>
+          )}
+          {contactInfo.website && (
+            <a href={contactInfo.website} style={{ color: accentColor }} className="hover:underline">
+              Website
+            </a>
+          )}  
         </div>
       </header>
 
       {profileInfo.summary && (
         <section className="mb-6">
-          <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3" style={{ color: accentColor, borderColor: accentColor }}>
+          <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3" 
+              style={{ color: accentColor, borderColor: accentColor }}>
             Summary
           </h3>
           <p className="text-sm text-gray-700 leading-relaxed">{profileInfo.summary}</p>
@@ -355,7 +404,8 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
 
       {workExperience.length > 0 && (
         <section className="mb-6">
-          <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-4" style={{ color: accentColor, borderColor: accentColor }}>
+          <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-4" 
+              style={{ color: accentColor, borderColor: accentColor }}>
             Experience
           </h3>
           <div className="space-y-6">
@@ -365,18 +415,13 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
                   <div>
                     <span className="font-bold text-gray-900 text-base">{exp.title}</span>
                     <span className="text-gray-400 mx-2">|</span>
-                    <span className="font-semibold text-gray-700">{exp.company}</span>
-                  </div>
-                  {/* if end date is present */}
-                  {exp.endDate && <span className="text-xs text-gray-500 italic">{formatYearMonth(exp.endDate)}</span>}
-                  {/* if start and end dates are the same */}
-                  {exp.startDate === exp.endDate ? (
-                    <span className="text-xs text-gray-500 italic">{formatYearMonth(exp.startDate)}</span>
-                  ) : (
-                    <span className="text-xs text-gray-500 italic">
-                      {formatYearMonth(exp.startDate)} – {formatYearMonth(exp.endDate)}
+                    <span className="font-semibold text-gray-700">
+                      {exp.company}{exp.location ? ` | ${exp.location}` : ""}
                     </span>
-                  )}
+                  </div>
+                  <span className="text-xs text-gray-500 italic whitespace-nowrap ml-4">
+                    {formatYearMonth(exp.startDate)} – {formatYearMonth(exp.endDate)}
+                  </span>
                 </div>
                 <ul className="list-none ml-5 text-sm text-gray-700 space-y-1">
                   {exp.description?.split("\n").map((line, i) => (
@@ -402,22 +447,35 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
           <div className="space-y-4">
             {projects.map((proj, idx) => (
               <div key={idx}>
-                 <div className="flex items-center gap-3 mb-1">
-                    <h4 className="font-bold text-gray-900">{proj.title}</h4>
-                    <div className="flex gap-2 text-xs">
-                        {proj.liveDemo && (
-                          <a href={proj.liveDemo} className="hover:underline" style={{ color: accentColor }}>
-                            Live Demo
-                          </a>
-                        )}
-                        {proj.github && (
-                          <a href={proj.github} className="hover:underline" style={{ color: accentColor }}>
-                            GitHub
-                          </a>
-                        )}
-                    </div>
-                 </div>
-                 <p className="text-sm text-gray-700 leading-relaxed">{proj.description}</p>
+                <div className="flex items-center gap-3 mb-1">
+                  <h4 className="font-bold text-gray-900">{proj.title}</h4>
+                  <div className="flex gap-2 text-xs">
+                    {proj.liveDemo && (
+                      <a href={proj.liveDemo} className="hover:underline" style={{ color: accentColor }}>
+                        Live Demo
+                      </a>
+                    )}
+                    {proj.github && (
+                      <a href={proj.github} className="hover:underline" style={{ color: accentColor }}>
+                        GitHub
+                      </a>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed mb-2">{proj.description}</p>
+                {proj.technologies && proj.technologies.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {proj.technologies.map((tech, techIdx) => (
+                      <span 
+                        key={techIdx}
+                        className="px-2 py-0.5 text-xs rounded font-medium"
+                        style={{ backgroundColor: accentColor + '10', color: accentColor }}
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -452,44 +510,49 @@ const Template2 = ({ resumeData = {}, forPdf = false, containerWidth }) => {
 
       {/* Two Column Bottom: Certs + Languages */}
       <div className="grid grid-cols-2 gap-8">
-          {certifications.length > 0 && (
-            <section>
-              <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3"
-                  style={{ color: accentColor, borderColor: accentColor }}>
-                Certifications
-              </h3>
-              <ul className="text-sm text-gray-700 space-y-1">
-                {certifications.map((cert, idx) => (
-                   <li key={idx} className="flex items-start">
-                     <span className="mr-2" style={{ color: accentColor }}>•</span>
-                     <span>{cert.name} <span className="text-gray-500 text-xs">({cert.issueDate})</span></span>
-                   </li>
-                ))}
-              </ul>
-            </section>
-          )}
+        {certifications.length > 0 && (
+          <section>
+            <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3"
+                style={{ color: accentColor, borderColor: accentColor }}>
+              Certifications
+            </h3>
+            <ul className="text-sm text-gray-700 space-y-2">
+              {certifications.map((cert, idx) => (
+                <li key={idx} className="flex items-start">
+                  <span className="mr-2" style={{ color: accentColor }}>•</span>
+                  <span>
+                    <span className="font-semibold">{cert.name}</span>
+                    {cert.issuer && <span className="text-gray-500"> — {cert.issuer}</span>}
+                    {cert.issueDate && <span className="text-gray-500 text-xs"> ({cert.issueDate})</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-           {languages.length > 0 && (
-            <section>
-              <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3"
-                  style={{ color: accentColor, borderColor: accentColor }}>
-                Languages
-              </h3>
-               <div className="flex flex-wrap gap-2">
-                {languages.map((lang, idx) => (
-                   <span key={idx} className="text-sm text-gray-700 border-r pr-2 last:border-0 mr-2"
-                         style={{ borderRightColor: `${accentColor}40` }}>
-                      {lang.name} <span className="text-gray-500 text-xs">({lang.progress || lang.level})</span>
-                   </span>
-                ))}
-              </div>
-            </section>
-          )}
+        {languages.length > 0 && (
+          <section>
+            <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3"
+                style={{ color: accentColor, borderColor: accentColor }}>
+              Languages
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {languages.map((lang, idx) => (
+                <span key={idx} className="text-sm text-gray-700 border-r pr-2 last:border-0 mr-2"
+                      style={{ borderRightColor: `${accentColor}40` }}>
+                  {lang.name} <span className="text-gray-500 text-xs">({lang.level})</span>
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
       {skills.length > 0 && (
-        <section className="mb-6">
-          <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3" style={{ color: accentColor, borderColor: accentColor }}>
+        <section className="mt-6">
+          <h3 className="text-sm font-bold uppercase tracking-widest border-b pb-1 mb-3" 
+              style={{ color: accentColor, borderColor: accentColor }}>
             Skills
           </h3>
           <div className="flex flex-wrap gap-2">

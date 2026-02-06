@@ -44,8 +44,8 @@ const Stats = () => {
       style: "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
     },
     {
-      label: "Active Today",
-      key: "activeToday",
+      label: "Active Users",
+      key: "activeUsers",
       icon: "bolt",
       color: "emerald",
       style: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400",

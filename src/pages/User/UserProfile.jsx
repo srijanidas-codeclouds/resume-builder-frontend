@@ -140,7 +140,7 @@ const UserProfile = () => {
 
                   <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
-                      className={`h-full bg-gradient-to-r ${item.color}`}
+                      className={`h-full bg-linear-to-r ${item.color}`}
                       style={{ width: `${item.score}%` }}
                     />
                   </div>

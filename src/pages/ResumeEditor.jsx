@@ -32,29 +32,119 @@ const ResumeEditor = () => {
   const previewRef = useRef(null);
 
   /**
-   * Fixed serialization:
-   * This now spreads the entire 'resume' object to ensure work history,
-   * education, and skills are sent to the backend.
+   * FIXED SERIALIZATION:
+   * Ensures all data matches backend validation rules exactly
    */
-  const serializeResumeForSave = () => ({
-    version: resume.version,
+  const serializeResumeForSave = () => {
+    const payload = {
+      version: resume.version,
+      title: resume.title || null,
+      summary: resume.summary ?? resume.personal_details?.summary ?? null,
+      template,
+      accent_color: resume.accent_color || '#2563eb',
+      
+      // Skills: ensure it's an array of strings
+      skills: Array.isArray(resume.skills) 
+        ? resume.skills.filter(s => s && typeof s === 'string')
+        : [],
+      
+      // Languages: ensure proper structure
+      languages: Array.isArray(resume.languages)
+        ? resume.languages
+            .filter(l => l && l.name)
+            .map(l => ({
+              name: l.name,
+              level: l.level || 'intermediate'
+            }))
+        : [],
 
-    title: resume.title,
-    summary: resume.summary ?? resume.personal_details?.summary ?? null,
-    template,
-    accent_color: resume.accent_color,
+      // Personal details
+      personal_details: resume.personal_details ? {
+        full_name: resume.personal_details.full_name || '',
+        designation: resume.personal_details.designation || '',
+        email: resume.personal_details.email || '',
+        phone: resume.personal_details.phone || '',
+        location: resume.personal_details.location || '',
+      } : {},
 
-    skills: resume.skills,
-    languages: resume.languages,
+      // Socials
+      socials: resume.socials ? {
+        linkedIn: resume.socials.linkedIn || '',
+        github: resume.socials.github || '',
+        portfolio: resume.socials.portfolio || '',
+        twitter: resume.socials.twitter || '',
+      } : {},
 
-    personal_details: resume.personal_details,
-    socials: resume.socials,
+      // Experiences: ensure location field is included
+      experiences: Array.isArray(resume.experiences)
+        ? resume.experiences
+            .filter(exp => exp && (exp.position || exp.organization))
+            .map(exp => ({
+              organization: exp.organization || '',
+              position: exp.position || '',
+              location: exp.location || '', // ✅ Include location
+              description: exp.description || '',
+              start_date: exp.start_date || null,
+              end_date: exp.is_current ? null : (exp.end_date || null),
+              is_current: Boolean(exp.is_current),
+            }))
+        : [],
 
-    experiences: resume.experiences,
-    projects: resume.projects,
-    education: resume.education,
-    certifications: resume.certifications,
-  });
+      // Projects: ensure tech_stack is a comma-separated STRING, not array
+      projects: Array.isArray(resume.projects)
+        ? resume.projects
+            .filter(proj => proj && proj.name)
+            .map(proj => ({
+              name: proj.name || '',
+              description: proj.description || '',
+              // ✅ CRITICAL FIX: Convert array to comma-separated string
+              tech_stack: Array.isArray(proj.tech_stack)
+                ? proj.tech_stack.join(', ')
+                : (proj.tech_stack || ''),
+              start_date: proj.start_date || null,
+              end_date: proj.end_date || null,
+              live_link: proj.live_link || '',
+              github_link: proj.github_link || '',
+            }))
+        : [],
+
+      // Education
+      education: Array.isArray(resume.education)
+        ? resume.education
+            .filter(edu => edu && (edu.institution || edu.degree))
+            .map(edu => ({
+              institution: edu.institution || '',
+              degree: edu.degree || '',
+              field: edu.field || '',
+              grade: edu.grade || '',
+              start_date: edu.start_date || null,
+              end_date: edu.end_date || null,
+            }))
+        : [],
+
+      // Certifications
+      certifications: Array.isArray(resume.certifications)
+        ? resume.certifications
+            .filter(cert => cert && cert.title)
+            .map(cert => ({
+              title: cert.title || '',
+              issuer: cert.issuer || '',
+              issued_date: cert.issued_date || null,
+              url: cert.url || '',
+            }))
+        : [],
+    };
+
+    // Remove empty arrays to avoid unnecessary DB operations
+    if (payload.experiences.length === 0) delete payload.experiences;
+    if (payload.projects.length === 0) delete payload.projects;
+    if (payload.education.length === 0) delete payload.education;
+    if (payload.certifications.length === 0) delete payload.certifications;
+    if (payload.skills.length === 0) delete payload.skills;
+    if (payload.languages.length === 0) delete payload.languages;
+
+    return payload;
+  };
 
   /* ===============================
      FETCH RESUME
@@ -82,6 +172,7 @@ const ResumeEditor = () => {
         setTemplate(data.template || "classic");
       } catch (err) {
         console.error("Failed to fetch resume", err);
+        toast.error("Failed to load resume");
       } finally {
         setLoading(false);
       }
@@ -114,9 +205,11 @@ const ResumeEditor = () => {
       workExperience: (resume.experiences || []).map((exp) => ({
         title: exp.position,
         company: exp.organization,
+        location: exp.location,
         startDate: exp.start_date,
         endDate: exp.is_current ? "Present" : exp.end_date,
         description: exp.description,
+        is_current: exp.is_current,
       })),
       projects: (resume.projects || []).map((proj) => ({
         title: proj.name,
@@ -125,7 +218,14 @@ const ResumeEditor = () => {
         endDate: proj.end_date,
         liveDemo: proj.live_link,
         github: proj.github_link,
-        technologies: proj.tech_stack ? proj.tech_stack.split(",") : [],
+        // Handle both string and array formats for tech_stack
+        technologies: proj.tech_stack 
+          ? (typeof proj.tech_stack === 'string' 
+              ? proj.tech_stack.split(",").map((tech) => tech.trim())
+              : Array.isArray(proj.tech_stack) 
+                ? proj.tech_stack 
+                : [])
+          : [],
       })),
       education: (resume.education || []).map((edu) => ({
         institution: edu.institution,
@@ -149,17 +249,33 @@ const ResumeEditor = () => {
 
   /* ===============================
      SAVE LOGIC
-     Note: Auto-save useEffect removed
   ================================ */
   const handleSaveAndExit = async () => {
     setIsSaving(true);
     try {
-      // Sending full serialized data
-      await resumeService.update(id, serializeResumeForSave());
-      navigate("/dashboard");
+      const payload = serializeResumeForSave();
+      
+      // Optional: Log for debugging (remove in production)
+      // if (process.env.NODE_ENV === 'development') {
+      //   console.log('Saving payload:', payload);
+      // }
+      
+      await resumeService.update(id, payload);
+      toast.success("Resume saved successfully!");
+      navigate("/dashboard/my-resumes");
     } catch (error) {
       console.error("Save failed", error);
-      toast.error("Failed to save resume. Please try again.");
+      
+      // Better error messages
+      if (error.response?.status === 422) {
+        const errors = error.response.data.errors;
+        const firstError = Object.values(errors)[0]?.[0];
+        toast.error(firstError || "Validation error. Please check your data.");
+      } else if (error.response?.status === 409) {
+        toast.error("Resume was modified elsewhere. Please reload.");
+      } else {
+        toast.error("Failed to save resume. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -236,7 +352,7 @@ const ResumeEditor = () => {
       <header className="shrink-0 h-16 z-50 px-6 flex items-center justify-between glass-card border-b-0 m-4 rounded-xl">
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <div className="w-8 h-8 rounded-lg text-white flex items-center justify-center bg-blue-600 dark:bg-linear-to-br dark:from-(--brand-indigo) dark:to-(--brand-purple)">
+            <div className="w-8 h-8 rounded-lg text-white flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-700 dark:from-indigo-600 dark:to-purple-600">
               <i className="fa fa-cube" />
             </div>
             <span className="font-bold text-lg tracking-tight text-gray-800 dark:text-white">
@@ -246,13 +362,12 @@ const ResumeEditor = () => {
 
           <div className="h-6 w-px bg-gray-200 dark:bg-white/10 mx-2"></div>
 
-          {/* Status logic simplified since auto-save is removed */}
           <div className="flex items-center gap-2">
             <span
-              className={`size-2 rounded-full ${isSaving ? "bg-yellow-400 animate-pulse" : "bg-gray-400"}`}
+              className={`size-2 rounded-full ${isSaving ? "bg-yellow-400 animate-pulse" : "bg-green-500"}`}
             ></span>
             <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
-              {isSaving ? "Saving changes..." : "Manual Save Mode"}
+              {isSaving ? "Saving changes..." : "Ready"}
             </p>
           </div>
         </div>
@@ -274,12 +389,12 @@ const ResumeEditor = () => {
           </div>
 
           <button
-  onClick={() =>
-    downloadA4PDF({
-      template,
-      resumeData: getTemplateData(),
-    })
-  }
+            onClick={() =>
+              downloadA4PDF({
+                template,
+                resumeData: getTemplateData(),
+              })
+            }
             className="h-9 px-4 rounded-lg bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-700 dark:text-gray-200 text-xs font-bold transition-all flex items-center gap-2 border border-transparent dark:border-white/10"
           >
             <span className="material-symbols-outlined text-[18px]">
@@ -294,7 +409,7 @@ const ResumeEditor = () => {
             className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/40 flex items-center gap-2 disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[18px]">save</span>
-            <span>{isSaving ? "Saving..." : "Save and Exit"}</span>
+            <span>{isSaving ? "Saving..." : "Save & Exit"}</span>
           </button>
 
           <div className="ml-2">
@@ -352,39 +467,39 @@ const ResumeEditor = () => {
 
           <div className="flex-1 w-full flex justify-center overflow-y-auto custom-scrollbar">
             <div
-  ref={previewRef}
-  className="resume-page bg-white shadow-2xl w-[210mm] min-h-[297mm] origin-top"
->
+              ref={previewRef}
+              className="resume-page bg-white shadow-2xl w-[210mm] min-h-[297mm] origin-top"
+            >
               <TemplateComponent
                 resumeData={getTemplateData()}
                 containerWidth={800}
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-    Accent
-  </span>
+          
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+              Accent Color
+            </span>
 
-  <input
-    type="color"
-    value={resume.accent_color || "#2563eb"} // default blue
-    onChange={(e) =>
-      setResume((prev) => ({
-        ...prev,
-        accent_color: e.target.value,
-      }))
-    }
-    className="h-9 w-9 cursor-pointer rounded-md border border-gray-200 dark:border-white/10 bg-transparent"
-    title="Choose accent color"
-  />
-</div>
-
+            <input
+              type="color"
+              value={resume.accent_color || "#2563eb"}
+              onChange={(e) =>
+                setResume((prev) => ({
+                  ...prev,
+                  accent_color: e.target.value,
+                }))
+              }
+              className="h-9 w-9 cursor-pointer rounded-md border border-gray-200 dark:border-white/10 bg-transparent"
+              title="Choose accent color"
+            />
+          </div>
         </main>
 
         {/* ========== RIGHT FORM PANEL ========== */}
-        <aside className="hidden xl:flex w-[400px] glass-card rounded-xl flex-col print:hidden overflow-hidden">
-          <div className="p-5 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/[0.02]">
+        <aside className="hidden xl:flex w-96 glass-card rounded-xl flex-col print:hidden overflow-hidden">
+          <div className="p-5 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-white/2">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white capitalize flex items-center gap-2">
               {sections.find((s) => s.id === activeSection)?.icon && (
                 <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">

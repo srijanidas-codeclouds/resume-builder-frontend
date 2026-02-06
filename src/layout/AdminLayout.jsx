@@ -14,10 +14,10 @@ const AdminLayout = () => {
 
   return (
     // Replaced hardcoded bg with a generic class that respects your CSS :root/.dark settings
-    <div className="flex min-h-screen bg-white dark:bg-[#141422] text-slate-900 dark:text-slate-200 transition-colors duration-500">
+    <div className="flex h-screen bg-white dark:bg-[#141422] text-slate-900 dark:text-slate-200 transition-colors duration-500">
       
       {/* Sidebar */}
-      <aside className="w-72 border-r border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] backdrop-blur-xl p-6 flex flex-col">
+      <aside className="w-72 border-r border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/2 backdrop-blur-xl p-6 flex flex-col">
         <div className="mb-10 px-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold font-playfair tracking-tight">
             <span className="text-gradient">Admin</span>
@@ -45,14 +45,14 @@ const AdminLayout = () => {
             Users
           </NavLink>
           
-          <NavLink title="Analytics" to="/admin/stats/summary" className={navClass}>
+          {/* <NavLink title="Analytics" to="/admin/stats/summary" className={navClass}>
             <span className="mr-3 text-lg opacity-70">
                 <div className="material-symbols-outlined">
                     bar_chart
                 </div>
             </span>
             Stats
-          </NavLink>
+          </NavLink> */}
           {/* Admin Section - Now stays at the bottom of the nav list or scrolls with it */}
           {isAdmin && (
             <div className="mt-6 pt-4 border-t border-slate-200/40 dark:border-slate-700/40">
@@ -76,7 +76,7 @@ const AdminLayout = () => {
         {/* Profile Section */}
         <div className="mt-auto glass-card p-4 rounded-2xl border-slate-200 dark:border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500" />
+            <div className="w-8 h-8 rounded-full bg-linear-to-tr from-indigo-500 to-purple-500" />
             <div className="text-xs">
               <p className="font-medium">Admin User</p>
               <p className="opacity-50 underline cursor-pointer hover:text-purple-500">
@@ -112,7 +112,7 @@ const AdminLayout = () => {
         <div className="absolute inset-0 hero-gradient -z-10 opacity-40 dark:opacity-60" />
         
         {/* Top Header */}
-        <header className="h-16 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-8 bg-white/10 dark:bg-white/[0.01]">
+        <header className="h-16 border-b border-slate-200 dark:border-white/5 flex items-center justify-between px-8 bg-white/10 dark:bg-white/1">
           <div className="text-sm text-slate-500 dark:text-slate-400">
             System Status: <span className="text-green-500 font-bold">● Online</span>
           </div>

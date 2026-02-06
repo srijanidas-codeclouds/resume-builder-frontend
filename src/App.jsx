@@ -81,7 +81,7 @@ const App = () => {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<Users />} />
-          <Route path="stats/summary" element={<Stats />} />
+          {/* <Route path="stats/summary" element={<Stats />} /> */}
         </Route>
 
         {/* 404 */}

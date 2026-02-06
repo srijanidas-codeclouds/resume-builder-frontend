@@ -5,8 +5,9 @@ import { useAuth } from "../../context/AuthContext";
 import AddUserModal from "../../components/AddUserModal";
 import { useNavigate } from "react-router";
 import UserViewModal from "../../components/UserViewModal";
+import { resumeService } from "../../services/resume.service";
 
-const Users = () => {
+const Users =  () => {
   const navigate = useNavigate();  
   const { canManageUsers, canDeleteUsers, canSuspendUsers } = useAuth();
 
@@ -21,6 +22,8 @@ const Users = () => {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState([]);
+
+  const [total, setTotal] = useState(0);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,7 +125,7 @@ const Users = () => {
       Email: u.email,
       Role: u.role,
       Status: u.status,
-      Joined: u.updated_at,
+      Joined: u.joined_at,
     }));
 
     const csv = [
@@ -238,6 +241,17 @@ const Users = () => {
                 <option value="active">Active</option>
                 <option value="suspended">Suspended</option>
               </select>
+              {/* no of resumes */}
+              <select
+                className="flex-1 md:flex-none h-9 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 text-xs font-bold border border-slate-200 dark:border-slate-700 outline-none"
+                value={users.resumes}
+                onChange={(e) => { setResumes(e.target.value); setPage(1); }}
+              >
+                <option value="">No. of Resumes</option>
+                <option value="0-1">0-1</option>
+                <option value="2-5">2-5</option>
+                <option value="6+">6+</option>
+              </select> 
             </div>
           </div>
 
@@ -277,6 +291,7 @@ const Users = () => {
                 <th className="px-4 py-4 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Role</th>
                 <th className="px-4 py-4 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Joined Date</th>
                 <th className="px-4 py-4 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
+                <th className="px-4 py-4 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Membership</th>
                 <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Actions</th>
               </tr>
             </thead>
@@ -325,8 +340,8 @@ const Users = () => {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-sm text-slate-600 dark:text-slate-400 text-nowrap">
-                    {new Date(user.updated_at).toLocaleDateString()}
-                  </td>
+                    {new Date(user.joined_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </td>                 
                   <td className="px-4 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       user.status === 'active' 
@@ -335,6 +350,16 @@ const Users = () => {
                     }`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                       {user.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user.membership === 'premium' 
+                      ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' 
+                      : 'bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-400'
+                    }`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${user.membership === 'premium' ? 'bg-amber-500' : 'bg-slate-500'}`}></span>
+                      {user.membership}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -379,7 +404,7 @@ const Users = () => {
               <button
                 key={i}
                 disabled={!link.url || link.active}
-                className={`flex items-center justify-center px-3 h-8 min-w-[32px] rounded-md text-xs font-bold transition-all ${
+                className={`flex items-center justify-center px-3 h-8 min-w-8 rounded-md text-xs font-bold transition-all ${
                   link.active
                     ? "bg-[#135bec] text-white shadow-md shadow-[#135bec]/20"
                     : "text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-slate-200"
